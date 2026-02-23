@@ -5,343 +5,368 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>HydroTrack</title>
     <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="global.css">
     <meta name="theme-color" content="#A3D8FF">
     <link rel="apple-touch-icon" href="icon-192.png">
     <style>
-        :root {
-            --light-blue: #A3D8FF;
-            --grey-text: #888888;
-            --light-grey: #F0F0F0;
-            --bg-white: #FFFFFF;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            background-color: var(--bg-white);
-            color: #333;
+        /* Home-specific layout tweaks */
+        .main-content {
+            flex-grow: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100dvh;
-            padding: 20px;
             justify-content: space-between;
-        }
-
-        /* Top Section: Target */
-        .header {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            padding-top: 10px;
+            padding: 20px;
         }
 
         .target-container {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 8px;
-            font-size: 1.1rem;
+            gap: 4px;
             color: #555;
+            margin-top: 20px;
+        }
+
+        .label {
+            font-size: 0.9rem;
+            width: 100%;
+            text-align: center;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
         }
 
         .target-value {
-            font-weight: 600;
-            border-bottom: 2px dashed var(--light-blue);
+            font-weight: 900;
+            font-size: 2rem;
+            border-bottom: 2px dashed var(--light-blue, #A3D8FF);
             padding: 2px 5px;
+            cursor: pointer;
         }
 
         .edit-input {
-            width: 80px;
-            font-size: 1rem;
+            width: 100px;
+            font-size: 2rem;
+            font-weight: 200;
             padding: 4px;
-            border: 1px solid var(--light-grey);
-            border-radius: 4px;
-            text-align: center;
+            border: 1px solid #E5E5EA;
+            border-radius: 8px;
+            text-align: left;
             display: none;
+        }
+
+        .unit {
+            font-size: 2rem;
+            font-weight: 400;
         }
 
         .save-btn {
             display: none;
-            background: var(--light-blue);
+            background: var(--light-blue, #A3D8FF);
             color: white;
             border: none;
-            padding: 4px 10px;
-            border-radius: 4px;
+            padding: 8px 12px;
+            border-radius: 8px;
             font-size: 0.8rem;
-            cursor: pointer;
+            font-weight: 600;
+            margin-left: 5px;
+            vertical-align: middle;
         }
 
-        .reset-day-btn {
-            position: absolute;
-            right: 0;
-            background: none;
-            border: none;
-            color: var(--grey-text);
-            font-size: 0.8rem;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-
-        /* Middle Section: Progress Circle */
-        .progress-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            flex-grow: 1;
-        }
-
-        .circle-outer {
+        /* --- NEW SVG CIRCLE STYLES --- */
+        .progress-wrapper {
+            position: relative;
             width: 240px;
             height: 240px;
-            border-radius: 50%;
-            background: conic-gradient(var(--light-blue) 0%, var(--light-grey) 0%);
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            transition: background 0.5s ease;
         }
 
-        .circle-inner {
-            width: 200px;
-            height: 200px;
-            background: white;
-            border-radius: 50%;
+        .progress-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg); /* Rotates so progress starts at 12 o'clock */
+        }
+
+        .track-circle {
+            fill: none;
+            stroke: #F0F0F0; /* Light grey */
+            stroke-width: 20;
+        }
+
+        .progress-circle {
+            fill: none;
+            stroke-width: 20;
+            stroke-linecap: round; /* Gives the rounded ends! */
+            /* 628.32 is the circumference of a circle with 100 radius (2 * PI * 100) */
+            stroke-dasharray: 628.32; 
+            stroke-dashoffset: 628.32; /* Starts empty */
+            transition: stroke-dashoffset 0.8s ease-out;
+        }
+
+        .progress-text {
+            position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            z-index: 2; /* Ensures text is above the SVG */
         }
 
-        .percentage {
-            font-size: 3.5rem;
-            font-weight: 300;
-            color: #333;
-        }
+        .percentage { font-size: 3.5rem; font-weight: 300; }
+        .current-ml { color: #888888; margin-top: 5px; }
 
-        .current-ml {
-            font-size: 0.85rem;
-            color: var(--grey-text);
-            margin-top: 5px;
-        }
-
-        /* Bottom Section: Buttons */
         .controls {
             width: 100%;
             display: flex;
             justify-content: space-around;
-            padding-bottom: 30px;
+            padding-bottom: 20px;
         }
 
         .quick-add {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            background: none;
-            border: none;
-            cursor: pointer;
+            background: none; border: none; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
         }
 
         .icon-circle {
-            width: 60px;
-            height: 60px;
-            background-color: var(--light-blue);
+            width: 60px; height: 60px;
+            background-color: var(--light-blue, #A3D8FF);
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             transition: transform 0.1s ease;
         }
 
-        .icon-circle:active {
-            transform: scale(0.9);
-        }
-
-        .icon-circle svg {
-            width: 30px;
-            height: 30px;
-            fill: white;
-        }
-
-        .label-ml {
-            font-size: 0.75rem;
-            color: var(--grey-text);
-        }
-
-        /* Utility */
-        .hidden { display: none !important; }
+        .icon-circle:active { transform: scale(0.9); }
+        .icon-circle svg { width: 30px; height: 30px; fill: white; }
+        .label-ml { font-size: 0.75rem; color: #888888; }
+        .reset-link { font-size: 0.7rem; color: #ccc; text-decoration: underline; margin-top: 10px; cursor: pointer;}
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="target-container" id="targetContainer">
-            <span>Target:</span>
-            <span class="target-value" id="targetDisplay">2000</span>
-            <input type="number" class="edit-input" id="targetInput" value="2000">
-            <span>ml</span>
-            <button class="save-btn" id="saveTargetBtn">Save</button>
+    <header class="pwa-header">
+        <div class="brand">
+            <img src="icon-192.png" alt="Logo">
+            <span>HydroTrack</span>
         </div>
-        <button class="reset-day-btn" id="manualReset">Reset</button>
-    </div>
+        <a href="report.html" class="header-action">
+            <svg viewBox="0 0 24 24"><path d="M19,19H5V8H19M16,1V3H8V1H6V3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3H18V1M17,12H12V17H17V12Z"/></svg>
+        </a>
+    </header>
 
-    <div class="progress-section">
-        <div class="circle-outer" id="progressCircle">
-            <div class="circle-inner">
+    <main class="main-content">
+        <div class="target-container">
+            <div class="target-row">
+                <span class="label">Target:</span>
+                <div class="input-group">
+                    <span class="target-value" id="targetDisplay">2000</span>
+                    <input type="number" class="edit-input" id="targetInput">
+                    <span class="unit">ml</span>
+                    <button class="save-btn" id="saveTargetBtn">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="progress-wrapper">
+            <svg class="progress-svg" viewBox="0 0 240 240">
+                <defs>
+                    <filter id="inner-shadow">
+                        <feOffset dx="2" dy="2"/>
+                        <feGaussianBlur stdDeviation="3" result="offset-blur"/>
+                        <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse"/>
+                        <feFlood flood-color="rgba(0,0,0,0.15)" result="color"/>
+                        <feComposite operator="in" in="color" in2="inverse" result="shadow"/>
+                        <feComposite operator="over" in="shadow" in2="SourceGraphic"/>
+                    </filter>
+                    
+                    <linearGradient id="blue-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#A3D8FF" />
+                        <stop offset="100%" stop-color="#007AFF" />
+                    </linearGradient>
+                    <filter id="drop-shadow">
+                        <feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity="0.3" flood-color="#007AFF"/>
+                    </filter>
+                </defs>
+                
+                <circle cx="120" cy="120" r="100" class="track-circle" filter="url(#inner-shadow)"></circle>
+                
+                <circle cx="120" cy="120" r="100" class="progress-circle" id="progressSvgLine" filter="url(#drop-shadow)" stroke="url(#blue-gradient)"></circle>
+            </svg>
+            
+            <div class="progress-text">
                 <div class="percentage" id="percentDisplay">0%</div>
                 <div class="current-ml" id="mlDisplay">0 ml</div>
             </div>
         </div>
-    </div>
 
-    <div class="controls">
-        <button class="quick-add" onclick="addWater(250)">
-            <div class="icon-circle">
-                <!-- Water Glass Icon -->
-                <svg viewBox="0 0 24 24"><path d="M18.33,2l-1.33,12h-10L5.67,2H18.33 M21,0H3l2,18c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2L21,0L21,0z"/></svg>
-            </div>
-            <span class="label-ml">250ml</span>
-        </button>
+        <div class="controls">
+            <button class="quick-add" onclick="addWater(250)">
+                <div class="icon-circle"><svg viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5.004 10.229l-.003 -.186l.001 -.113l.008 -.071l1 -7a1 1 0 0 1 .877 -.853l.113 -.006h10a1 1 0 0 1 .968 .747l.022 .112l1.006 7.05l.004 .091c0 3.226 -2.56 5.564 -6 5.945v4.055h3a1 1 0 0 1 .117 1.993l-.117 .007h-8a1 1 0 0 1 -.117 -1.993l.117 -.007h3v-4.055c-3.358 -.371 -5.878 -2.609 -5.996 -5.716zm11.129 -6.229h-8.267l-.607 4.258a6.001 6.001 0 0 1 5.125 .787l.216 .155a4 4 0 0 0 4.32 .31l-.787 -5.51z" /></svg></div>
+                <span class="label-ml">250ml</span>
+            </button>
+            <button class="quick-add" onclick="addWater(600)">
+                <div class="icon-circle"><svg viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M13 1a2 2 0 0 1 1.995 1.85l.005 .15v.5c0 1.317 .381 2.604 1.094 3.705l.17 .25l.05 .072a9.093 9.093 0 0 1 1.68 4.92l.006 .354v6.199a3 3 0 0 1 -2.824 2.995l-.176 .005h-6a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-6.2a9.1 9.1 0 0 1 1.486 -4.982l.2 -.292l.05 -.069a6.823 6.823 0 0 0 1.264 -3.957v-.5a2 2 0 0 1 1.85 -1.995l.15 -.005h2zm.362 5h-2.724a8.827 8.827 0 0 1 -1.08 2.334l-.194 .284l-.05 .069a7.091 7.091 0 0 0 -1.307 3.798l-.003 .125a3.33 3.33 0 0 1 1.975 -.61a3.4 3.4 0 0 1 2.833 1.417c.27 .375 .706 .593 1.209 .583a1.4 1.4 0 0 0 1.166 -.583a3.4 3.4 0 0 1 .81 -.8l.003 .183c0 -1.37 -.396 -2.707 -1.137 -3.852l-.228 -.332a8.827 8.827 0 0 1 -1.273 -2.616z" /></svg></div>
+                <span class="label-ml">600ml</span>
+            </button>
+            <button class="quick-add" onclick="addWater(100)">
+                <div class="icon-circle"><svg viewBox="0 0 24 24"><path d="M12,2.1C10.1,4,6,8.4,6,12.5c0,3.3,2.7,6,6,6s6-2.7,6-6C18,8.4,13.9,4,12,2.1z"/></svg></div>
+                <span class="label-ml">100ml</span>
+            </button>
+        </div>
+        
+        <div class="reset-link" id="manualReset">Reset Today</div>
+    </main>
 
-        <button class="quick-add" onclick="addWater(600)">
-            <div class="icon-circle">
-                <!-- Bottle/Thermos Icon -->
-                <svg viewBox="0 0 24 24"><path d="M15,2c0-1.1-0.9-2-2-2h-2C9.9,0,9,0.9,9,2v2h6V2z M17,11V6c0-1.1-0.9-2-2-2H9C7.9,4,7,4.9,7,6v5c-1.1,0-2,0.9-2,2v9 c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2v-9C19,11.9,18.1,11,17,11z"/></svg>
-            </div>
-            <span class="label-ml">600ml</span>
-        </button>
+<script>
+    let state = {
+        target: 2000,
+        currentIntake: 0,
+        lastResetDate: new Date().toLocaleDateString(),
+        history: {}
+    };
 
-        <button class="quick-add" onclick="addWater(100)">
-            <div class="icon-circle">
-                <!-- Drop Icon -->
-                <svg viewBox="0 0 24 24"><path d="M12,2.1L12,2.1C10.1,4,6,8.4,6,12.5c0,3.3,2.7,6,6,6s6-2.7,6-6C18,8.4,13.9,4,12,2.1z"/></svg>
-            </div>
-            <span class="label-ml">100ml</span>
-        </button>
-    </div>
+    const targetDisplay = document.getElementById('targetDisplay');
+    const targetInput = document.getElementById('targetInput');
+    const saveTargetBtn = document.getElementById('saveTargetBtn');
+    const progressSvgLine = document.getElementById('progressSvgLine');
+    const percentDisplay = document.getElementById('percentDisplay');
+    const mlDisplay = document.getElementById('mlDisplay');
+    const manualReset = document.getElementById('manualReset');
 
-    <script>
-        // State management
-        let state = {
-            target: 2000,
-            currentIntake: 0,
-            lastResetDate: new Date().toLocaleDateString()
+    // Keep track of what the screen is currently showing for the animation
+    let currentDisplayedIntake = 0; 
+    let isInitialLoad = true;
+
+    function init() {
+        loadData();
+        checkDailyReset();
+        updateUI();
+    }
+
+    function loadData() {
+        const saved = localStorage.getItem('waterTrackerData');
+        if (saved) { state = JSON.parse(saved); }
+    }
+
+    function saveData() {
+        localStorage.setItem('waterTrackerData', JSON.stringify(state));
+    }
+
+    function checkDailyReset() {
+        const today = new Date().toLocaleDateString();
+        if (state.lastResetDate !== today) {
+            if (!state.history) state.history = {};
+            state.history[state.lastResetDate] = {
+                intake: state.currentIntake,
+                target: state.target
+            };
+            
+            state.currentIntake = 0;
+            state.lastResetDate = today;
+            saveData();
+        }
+    }
+
+    // --- NEW ANIMATION FUNCTION ---
+    function animateNumber(element, start, end, duration, suffix) {
+        let startTime = null;
+        const step = (timestamp) => {
+            if (!startTime) startTime = timestamp;
+            const progress = Math.min((timestamp - startTime) / duration, 1);
+            
+            // Ease-out formula (slows down as it reaches the target)
+            const easeOut = 1 - Math.pow(1 - progress, 3); 
+            const currentVal = Math.floor(start + (end - start) * easeOut);
+            
+            element.innerText = `${currentVal}${suffix}`;
+            
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            } else {
+                element.innerText = `${end}${suffix}`; // Snap to exact end value
+            }
         };
+        window.requestAnimationFrame(step);
+    }
 
-        const targetDisplay = document.getElementById('targetDisplay');
-        const targetInput = document.getElementById('targetInput');
-        const saveTargetBtn = document.getElementById('saveTargetBtn');
-        const progressCircle = document.getElementById('progressCircle');
-        const percentDisplay = document.getElementById('percentDisplay');
-        const mlDisplay = document.getElementById('mlDisplay');
-        const manualReset = document.getElementById('manualReset');
+    function updateUI() {
+        const targetIntake = state.currentIntake;
+        const targetPercentage = Math.min(Math.round((targetIntake / state.target) * 100), 100);
+        
+        // SVG Animation
+        const circumference = 628.32; 
+        const dashoffset = circumference - (targetPercentage / 100) * circumference;
+        progressSvgLine.style.strokeDashoffset = dashoffset;
 
-        // Initialize App
-        function init() {
-            loadData();
-            checkDailyReset();
-            updateUI();
-        }
-
-        // Load data from localStorage
-        function loadData() {
-            const saved = localStorage.getItem('waterTrackerData');
-            if (saved) {
-                state = JSON.parse(saved);
-            }
-        }
-
-        // Save data to localStorage
-        function saveData() {
-            localStorage.setItem('waterTrackerData', JSON.stringify(state));
-        }
-
-        // Check if date changed to reset intake
-        function checkDailyReset() {
-            const today = new Date().toLocaleDateString();
-            if (state.lastResetDate !== today) {
-                state.currentIntake = 0;
-                state.lastResetDate = today;
-                saveData();
-            }
-        }
-
-        // Update visual elements
-        function updateUI() {
-            const percentage = Math.min(Math.round((state.currentIntake / state.target) * 100), 100);
-            const remaining = 100 - percentage;
+        // Number Animation Logic
+        if (isInitialLoad) {
+            // Instantly show numbers on first load
+            percentDisplay.innerText = `${targetPercentage}%`;
+            mlDisplay.innerText = `${targetIntake} ml`;
+            currentDisplayedIntake = targetIntake;
+            isInitialLoad = false;
+        } else {
+            // Animate numbers from the old value to the new value over 800ms
+            const startPercentage = Math.min(Math.round((currentDisplayedIntake / state.target) * 100), 100);
             
-            // Update Circle Background
-            progressCircle.style.background = `conic-gradient(var(--light-blue) ${percentage}%, var(--light-grey) ${percentage}%)`;
+            animateNumber(percentDisplay, startPercentage, targetPercentage, 800, "%");
+            animateNumber(mlDisplay, currentDisplayedIntake, targetIntake, 800, " ml");
             
-            // Update Texts
-            percentDisplay.innerText = `${percentage}%`;
-            mlDisplay.innerText = `${state.currentIntake} ml`;
-            targetDisplay.innerText = state.target;
+            currentDisplayedIntake = targetIntake;
         }
 
-        // Add Water logic
-        function addWater(amount) {
-            state.currentIntake += amount;
+        targetDisplay.innerText = state.target;
+    }
+
+    function addWater(amount) {
+        state.currentIntake += amount;
+        saveData();
+        updateUI();
+    }
+
+    targetDisplay.onclick = () => {
+        targetDisplay.classList.add('hidden');
+        targetInput.classList.remove('hidden');
+        targetInput.style.display = 'inline-block';
+        targetInput.value = state.target;
+        saveTargetBtn.style.display = 'inline-block';
+        targetInput.focus();
+    };
+
+    saveTargetBtn.onclick = () => {
+        const val = parseInt(targetInput.value);
+        if (!isNaN(val) && val > 0) {
+            state.target = val;
             saveData();
             updateUI();
         }
+        targetDisplay.classList.remove('hidden');
+        targetInput.style.display = 'none';
+        saveTargetBtn.style.display = 'none';
+    };
 
-        // Target Editing logic
-        targetDisplay.onclick = () => {
-            targetDisplay.classList.add('hidden');
-            targetInput.classList.remove('hidden');
-            targetInput.style.display = 'block';
-            targetInput.value = state.target;
-            saveTargetBtn.style.display = 'inline-block';
-            targetInput.focus();
-        };
-
-        saveTargetBtn.onclick = () => {
-            const val = parseInt(targetInput.value);
-            if (!isNaN(val) && val > 0) {
-                state.target = val;
-                saveData();
-                updateUI();
-            }
-            targetDisplay.classList.remove('hidden');
-            targetInput.style.display = 'none';
-            saveTargetBtn.style.display = 'none';
-        };
-
-        // Manual Reset button logic
-        manualReset.onclick = () => {
-            if (confirm("Reset today's intake to 0?")) {
-                state.currentIntake = 0;
-                saveData();
-                updateUI();
-            }
-        };
-        // Register Service Worker for PWA
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then((registration) => {
-                        console.log('ServiceWorker registration successful:', registration.scope);
-                    })
-                    .catch((error) => {
-                        console.log('ServiceWorker registration failed:', error);
-                    });
-            });
+    manualReset.onclick = () => {
+        if (confirm("Reset today's intake to 0?")) {
+            state.currentIntake = 0;
+            saveData();
+            updateUI();
         }
-        // Initialize on load
-        init();
-    </script>
+    };
+
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js');
+        });
+    }
+
+    init();
+</script>
 </body>
 </html>

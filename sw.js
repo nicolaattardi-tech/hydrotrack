@@ -2,7 +2,10 @@ const CACHE_NAME = 'hydrotrack-v1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
+  './report.html',
+  './global.css',
   './manifest.json',
+  'https://cdn.jsdelivr.net/npm/chart.js', // Cache the library too!
   './icon-192.png',
   './icon-512.png'
 ];

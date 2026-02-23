@@ -1,0 +1,113 @@
+:root {
+    --light-blue: #4ab2ff;
+    --dark-blue: #007AFF;
+    --grey-text: #888888;
+    --light-grey: #F0F0F0;
+    --bg-white: #FFFFFF;
+    --bg-light: #F8F9FA;
+    --border-color:#c8c8c8;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background-color: var(--bg-white);
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+}
+
+/* Consistent Header */
+.pwa-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    background: white;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand img {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px; /* Matching the rounded style */
+}
+
+.brand span {
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: -0.5px;
+}
+
+/* The Rounded Square Action Button */
+.header-action {
+    width: 40px;
+    height: 40px;
+    background-color: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: 10px; /* Rounded corner square */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.header-action:active {
+    background-color: var(--border-color);
+}
+
+.header-action svg {
+    width: 22px;
+    height: 22px;
+    fill: var(--primary-blue);
+}
+
+/* Report Page Specifics */
+.history-log {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-bottom: 40px;
+}
+
+.day-card {
+    padding: 15px;
+    border-radius: 12px;
+    background: #F9F9F9;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    font-size: 0.9rem;
+    border: 1px solid transparent;
+}
+
+.day-card.goal-met {
+    font-weight: bold;
+    border-color: var(--light-blue);
+    background: #F0F8FF;
+}
+
+.day-card.goal-met .intake-val {
+    color: var(--dark-blue);
+}
+
+.hidden { display: none !important; }
