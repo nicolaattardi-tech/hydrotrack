@@ -39,7 +39,7 @@
             color: #666;
         }
 
-        /* --- Log Cards Section --- */
+/* --- Log Cards Section --- */
         .history-log {
             display: flex;
             flex-direction: column;
@@ -55,15 +55,14 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            /* Slightly more breathing room */
+            gap: 6px; /* Slightly more breathing room */
         }
 
         .day-card.goal-met {
             background-color: #F0F7FF;
             border: 1px solid var(--dark-blue);
         }
-
+        
         .day-card.goal-met .card-line-data .data-percent {
             margin-left: auto;
             font-weight: 700;
@@ -71,41 +70,18 @@
             font-size: 0.9rem;
         }
 
-        /* The Glow Effect for Today */
-        .day-card.today-highlight {
-            border: 2px solid var(--light-blue);
-            box-shadow: 0 0 15px rgba(163, 216, 255, 0.6);
-            /* Using your light-blue hex with transparency */
-            position: relative;
-        }
-
-        .day-card.today-highlight::after {
-            content: "TODAY";
-            position: absolute;
-            top: -10px;
-            right: 15px;
-            background: var(--light-blue);
-            color: white;
-            font-size: 0.6rem;
-            font-weight: 900;
-            padding: 2px 8px;
-            border-radius: 10px;
-            letter-spacing: 1px;
-        }
-
         .card-line-date {
             font-weight: 800;
             font-size: 1.1rem;
             color: #111;
             margin-bottom: 6px;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
             padding-bottom: 4px;
         }
 
         /* The "Tabbed" Row Logic */
         .card-line-data {
-            display: flex;
-            /* Allows horizontal alignment */
+            display: flex; /* Allows horizontal alignment */
             align-items: center;
             font-size: 0.85rem;
             color: #555;
@@ -113,8 +89,7 @@
 
         /* This creates the 'Tab' effect */
         .card-line-data .data-label {
-            width: 85px;
-            /* Fixed width for all names */
+            width: 85px; /* Fixed width for all names */
             font-weight: 700;
             color: #333;
             flex-shrink: 0;
@@ -220,7 +195,7 @@
             content: "";
             position: absolute;
             display: none;
-            left: 4px;
+            left:4px;
             top: 1px;
             width: 4px;
             /* Thinner width */
@@ -288,7 +263,7 @@
                 return new Date(parts[2], parts[0] - 1, parts[1]);
             }
         };
-
+        
         let state = JSON.parse(localStorage.getItem('waterTrackerData')) || { history: {} };
         let history = state.history;
         let chart = null;
@@ -297,131 +272,131 @@
         document.getElementById('labelT2').innerText = state.t2Name || "Protein";
 
         function renderGraph() {
-            const ctx = document.getElementById('waterChart').getContext('2d');
-            const style = getComputedStyle(document.documentElement);
+    const ctx = document.getElementById('waterChart').getContext('2d');
+    const style = getComputedStyle(document.documentElement);
+    
+    // 1. Fetch Colors from CSS Variables
+    const colorWater = style.getPropertyValue('--chart-water').trim();
+    const colorT1 = style.getPropertyValue('--chart-t1').trim();
+    const colorT2 = style.getPropertyValue('--chart-t2').trim();
 
-            // 1. Fetch Colors from CSS Variables
-            const colorWater = style.getPropertyValue('--chart-water').trim();
-            const colorT1 = style.getPropertyValue('--chart-t1').trim();
-            const colorT2 = style.getPropertyValue('--chart-t2').trim();
+    // 2. Capture Checkbox States (The missing piece!)
+    const showWater = document.getElementById('filterWater').checked;
+    const showT1 = document.getElementById('filterT1').checked;
+    const showT2 = document.getElementById('filterT2').checked;
 
-            // 2. Capture Checkbox States (The missing piece!)
-            const showWater = document.getElementById('filterWater').checked;
-            const showT1 = document.getElementById('filterT1').checked;
-            const showT2 = document.getElementById('filterT2').checked;
+    // 3. Prepare Data (Last 10 Days)
+    const sortedDates = Object.keys(history).sort((a, b) => parseDate(a) - parseDate(b)).slice(-10);
 
-            // 3. Prepare Data (Last 10 Days)
-            const sortedDates = Object.keys(history).sort((a, b) => parseDate(a) - parseDate(b)).slice(-10);
+    // 4. Calculate Smart Ceiling (Dynamic Height)
+    const maxValInView = Math.max(
+        ...sortedDates.map(d => history[d].intake || 0),
+        ...sortedDates.map(d => history[d].target || 0)
+    );
+    const WATER_MAX = Math.ceil((maxValInView + 500) / 1000) * 1000;
 
-            // 4. Calculate Smart Ceiling (Dynamic Height)
-            const maxValInView = Math.max(
-                ...sortedDates.map(d => history[d].intake || 0),
-                ...sortedDates.map(d => history[d].target || 0)
-            );
-            const WATER_MAX = Math.ceil((maxValInView + 500) / 1000) * 1000;
+    // 5. Date Formatting (DD.MM.YY)
+    const labels = sortedDates.map(d => {
+        const dateObj = parseDate(d);
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const year = String(dateObj.getFullYear()).slice(-2);
+        return `${day}.${month}.${year}`;
+    });
 
-            // 5. Date Formatting (DD.MM.YY)
-            const labels = sortedDates.map(d => {
-                const dateObj = parseDate(d);
-                const day = String(dateObj.getDate()).padStart(2, '0');
-                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-                const year = String(dateObj.getFullYear()).slice(-2);
-                return `${day}.${month}.${year}`;
-            });
+    // 6. Tracker Scaling Logic
+    const getMultiplier = (key) => {
+        const values = sortedDates.map(d => history[d][key] || 0);
+        const maxVal = Math.max(...values);
+        if (maxVal <= 0) return 0;
+        return (WATER_MAX * 0.7) / maxVal;
+    };
 
-            // 6. Tracker Scaling Logic
-            const getMultiplier = (key) => {
-                const values = sortedDates.map(d => history[d][key] || 0);
-                const maxVal = Math.max(...values);
-                if (maxVal <= 0) return 0;
-                return (WATER_MAX * 0.7) / maxVal;
-            };
+    const t1Multiplier = getMultiplier('t1Value');
+    const t2Multiplier = getMultiplier('t2Value');
 
-            const t1Multiplier = getMultiplier('t1Value');
-            const t2Multiplier = getMultiplier('t2Value');
+    if (chart) chart.destroy();
 
-            if (chart) chart.destroy();
-
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Water',
-                            data: sortedDates.map(d => history[d].intake),
-                            borderColor: colorWater,
-                            backgroundColor: colorWater,
-                            borderWidth: 1.5,
-                            pointRadius: 3,
-                            pointHoverRadius: 5,
-                            fill: false,
-                            tension: 0.4,
-                            hidden: !showWater // <--- Restores Filtering
-                        },
-                        {
-                            label: state.t1Name || 'Tracker 1',
-                            data: sortedDates.map(d => (history[d].t1Value || 0) * t1Multiplier),
-                            borderColor: colorT1,
-                            backgroundColor: colorT1,
-                            borderWidth: 1.5,
-                            pointRadius: 3,
-                            pointHoverRadius: 5,
-                            fill: false,
-                            tension: 0.4,
-                            hidden: !showT1 // <--- Restores Filtering
-                        },
-                        {
-                            label: state.t2Name || 'Tracker 2',
-                            data: sortedDates.map(d => (history[d].t2Value || 0) * t2Multiplier),
-                            borderColor: colorT2,
-                            backgroundColor: colorT2,
-                            borderWidth: 1.5,
-                            pointRadius: 3,
-                            pointHoverRadius: 5,
-                            fill: false,
-                            tension: 0.4,
-                            hidden: !showT2 // <--- Restores Filtering
-                        }
-                    ]
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Water',
+                    data: sortedDates.map(d => history[d].intake),
+                    borderColor: colorWater,
+                    backgroundColor: colorWater,
+                    borderWidth: 1.5,
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                    fill: false,
+                    tension: 0.4,
+                    hidden: !showWater // <--- Restores Filtering
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'nearest',
-                        intersect: true
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            displayColors: false,
-                            callbacks: {
-                                title: (context) => context[0].label,
-                                label: function (context) {
-                                    const date = sortedDates[context.dataIndex];
-                                    const idx = context.datasetIndex;
-                                    if (idx === 0) return `Water: ${history[date].intake}ml`;
-                                    if (idx === 1) return `${state.t1Name || 'T1'}: ${history[date].t1Value}`;
-                                    if (idx === 2) return `${state.t2Name || 'T2'}: ${history[date].t2Value}`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            display: false,
-                            min: 0,
-                            max: WATER_MAX
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { font: { size: 9 } }
+                {
+                    label: state.t1Name || 'Tracker 1',
+                    data: sortedDates.map(d => (history[d].t1Value || 0) * t1Multiplier),
+                    borderColor: colorT1,
+                    backgroundColor: colorT1,
+                    borderWidth: 1.5,
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                    fill: false,
+                    tension: 0.4,
+                    hidden: !showT1 // <--- Restores Filtering
+                },
+                {
+                    label: state.t2Name || 'Tracker 2',
+                    data: sortedDates.map(d => (history[d].t2Value || 0) * t2Multiplier),
+                    borderColor: colorT2,
+                    backgroundColor: colorT2,
+                    borderWidth: 1.5,
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                    fill: false,
+                    tension: 0.4,
+                    hidden: !showT2 // <--- Restores Filtering
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'nearest',
+                intersect: true
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    displayColors: false,
+                    callbacks: {
+                        title: (context) => context[0].label,
+                        label: function (context) {
+                            const date = sortedDates[context.dataIndex];
+                            const idx = context.datasetIndex;
+                            if (idx === 0) return `Water: ${history[date].intake}ml`;
+                            if (idx === 1) return `${state.t1Name || 'T1'}: ${history[date].t1Value}`;
+                            if (idx === 2) return `${state.t2Name || 'T2'}: ${history[date].t2Value}`;
                         }
                     }
                 }
-            });
+            },
+            scales: {
+                y: {
+                    display: false,
+                    min: 0,
+                    max: WATER_MAX
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 9 } }
+                }
+            }
         }
+    });
+}
 
         // 1. Define this OUTSIDE the function so it persists
         let itemsToShow = 10;
@@ -429,9 +404,6 @@
         function renderLog() {
             const container = document.getElementById('logContainer');
             container.innerHTML = '';
-
-            // Get today's date string to compare
-            const todayStr = new Date().toLocaleDateString();
 
             const showWater = document.getElementById('filterWater').checked;
             const showT1 = document.getElementById('filterT1').checked;
@@ -445,12 +417,8 @@
                 const percent = Math.round((entry.intake / entry.target) * 100);
                 const isMet = entry.intake >= entry.target;
 
-                // CHECK: Is this card for today?
-                const isToday = date === todayStr;
-
                 const card = document.createElement('div');
-                // We add 'today-highlight' if it's today
-                card.className = `day-card ${isMet ? 'goal-met' : ''} ${isToday ? 'today-highlight' : ''}`;
+                card.className = `day-card ${isMet ? 'goal-met' : ''}`;
 
                 card.innerHTML = `
                     <div class="card-line-date">${date}</div>
@@ -463,12 +431,12 @@
                     
                     <div class="card-line-data ${showT1 ? '' : 'hidden-row'}">
                         <span class="data-label">${entry.t1Name || 'Tracker 1'}:</span>
-                        <span class="data-value">${entry.t1Value || 0} ${entry.t1Unit || 'units'}</span>
+                        <span class="data-value">${entry.t1Value || 0} units</span>
                     </div>
 
                     <div class="card-line-data ${showT2 ? '' : 'hidden-row'}">
                         <span class="data-label">${entry.t2Name || 'Tracker 2'}:</span>
-                        <span class="data-value">${entry.t2Value || 0} ${entry.t2Unit || 'units'}</span>
+                        <span class="data-value">${entry.t2Value || 0} units</span>
                     </div>
                 `;
                 container.appendChild(card);

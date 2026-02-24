@@ -5,7 +5,10 @@
     --light-grey: #F0F0F0;
     --bg-white: #FFFFFF;
     --bg-light: #F8F9FA;
-    --border-color:#c8c8c8;
+    --border-color: #c8c8c8;
+    --chart-water: #007AFF;
+    --chart-t1: #34C759;
+    --chart-t2: #AF52DE;
 }
 
 * {
@@ -47,7 +50,8 @@ body {
 .brand img {
     width: 34px;
     height: 34px;
-    border-radius: 8px; /* Matching the rounded style */
+    border-radius: 8px;
+    /* Matching the rounded style */
 }
 
 .brand span {
@@ -62,7 +66,8 @@ body {
     height: 40px;
     background-color: var(--bg-light);
     border: 1px solid var(--border-color);
-    border-radius: 10px; /* Rounded corner square */
+    border-radius: 10px;
+    /* Rounded corner square */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -110,4 +115,6 @@ body {
     color: var(--dark-blue);
 }
 
-.hidden { display: none !important; }
+.hidden {
+    display: none !important;
+}
